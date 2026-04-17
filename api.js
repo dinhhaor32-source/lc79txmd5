@@ -265,6 +265,75 @@ app.get("/analyze", (req, res) => {
 // ============================================================
 // START
 // ============================================================
+// ============================================================
+// PREDICTION — dự đoán phiên hiện tại dựa trên tick mới nhất
+// ============================================================
+app.get("/prediction", (req, res) => {
+  const tick = getCurrentTick();
+  if (!tick || !tick.data) return res.json({ status: "no_data", message: "Chưa có tick data" });
+
+  const taiAmt = tick.data.totalAmountPerType?.TAI || 0;
+  const xiuAmt = tick.data.totalAmountPerType?.XIU || 0;
+  const taiUsers = tick.data.totalUsersPerType?.TAI || 0;
+  const xiuUsers = tick.data.totalUsersPerType?.XIU || 0;
+  const totalAmt = taiAmt + xiuAmt;
+  if (totalAmt === 0) return res.json({ status: "no_data", message: "Chưa có tiền cược" });
+
+  const taiPct = taiAmt / totalAmt * 100;
+  const xiuPct = 100 - taiPct;
+  const majorPct = Math.max(taiPct, xiuPct);
+  const majorSide = taiPct > xiuPct ? "TAI" : "XIU";
+  const minorSide = majorSide === "TAI" ? "XIU" : "TAI";
+
+  // Zone-based v3
+  let prediction = "SKIP", confidence = 0.5, reason = "";
+
+  if (majorPct >= 60 && majorPct < 65) {
+    prediction = majorSide;
+    confidence = 0.64;
+    reason = `ZONE 60-64%: theo bên nhiều tiền (${majorSide} ${majorPct.toFixed(1)}%)`;
+  } else if (majorPct >= 65 || majorPct < 45) {
+    // Tính score đơn giản
+    const imbalance = Math.abs(taiPct - xiuPct) / 100;
+    const mp_score = majorPct > 75 ? 0.90 : majorPct > 67 ? 0.75 : majorPct > 65 ? 0.55 : 0.35;
+    const finalScore = Math.min(0.85, 0.50 + mp_score * 0.40);
+    if (finalScore > 0.55) {
+      prediction = minorSide;
+      confidence = +finalScore.toFixed(3);
+      reason = `Lệch ${majorPct.toFixed(1)}%: ngược bên nhiều tiền (${majorSide})`;
+    } else {
+      prediction = "SKIP";
+      reason = "Tín hiệu không rõ";
+    }
+  } else {
+    prediction = "SKIP";
+    reason = `Vùng nhiễu ${majorPct.toFixed(1)}% (45-65%)`;
+  }
+
+  res.json({
+    status: "ok",
+    sessionId: tick.id,
+    tick: tick.tick,
+    subTick: tick.subTick,
+    state: tick.state,
+    prediction,
+    confidence: +(confidence * 100).toFixed(1),
+    reason,
+    data: {
+      taiPct: +taiPct.toFixed(2),
+      xiuPct: +xiuPct.toFixed(2),
+      taiAmt,
+      xiuAmt,
+      totalAmt,
+      taiUsers,
+      xiuUsers,
+      majorSide,
+      majorPct: +majorPct.toFixed(2)
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`[API] Running on port ${PORT}`);
   connect();
