@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎰 Tâm Lý Nhà Cái — House Psychology Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #040608;
+  --panel: #080c10;
+  --border: #1a2535;
+  --border2: #0f1a28;
+  --tai: #ff3b5c;
+  --tai-dim: rgba(255,59,92,0.15);
+  --xiu: #00d4ff;
+  --xiu-dim: rgba(0,212,255,0.12);
+  --gold: #f0b429;
+  --gold-dim: rgba(240,180,41,0.12);
+  --green: #00e676;
+  --green-dim: rgba(0,230,118,0.12);
+  --text: #d4e0f0;
+  --muted: #4a6080;
+  --mono: 'Share Tech Mono', monospace;
+  --head: 'Bebas Neue', cursive;
+  --body: 'Rajdhani', sans-serif;
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* === SCAN LINE OVERLAY === */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* === GRID BACKGROUND === */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* === GLOW ORBS === */
+.orb { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; }
+.orb-1 { width: 500px; height: 500px; background: rgba(255,59,92,0.06); top: -100px; right: -100px; }
+.orb-2 { width: 400px; height: 400px; background: rgba(0,212,255,0.05); bottom: -100px; left: -100px; }
+
+/* === MAIN LAYOUT === */
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+/* === HEADER === */
+.header {
+  text-align: center;
+  padding: 32px 0 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+}
+
+.header h1 {
+  font-family: var(--head);
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, var(--tai) 0%, var(--gold) 50%, var(--xiu) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.header .sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* === ALERT BOX === */
+.theory-box {
+  background: rgba(240,180,41,0.06);
+  border: 1px solid rgba(240,180,41,0.25);
+  border-left: 3px solid var(--gold);
+  border-radius: 4px;
+  padding: 16px 20px;
+  margin-bottom: 28px;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: #c8b87a;
+}
+
+.theory-box strong { color: var(--gold); }
+
+/* === SECTION TITLES === */
+.sec-title {
+  font-family: var(--head);
+  font-size: 1.4rem;
+  letter-spacing: 3px;
+  color: var(--muted);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sec-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* === INPUT PANEL === */
+.input-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.field label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.field input:focus { border-color: var(--xiu); box-shadow: 0 0 0 2px rgba(0,212,255,0.08); }
+
+.btn-analyze {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(255,59,92,0.15), rgba(0,212,255,0.15));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  color: white;
+  font-family: var(--head);
+  font-size: 1.2rem;
+  letter-spacing: 3px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-analyze:hover { background: linear-gradient(135deg, rgba(255,59,92,0.25), rgba(0,212,255,0.25)); transform: translateY(-1px); }
+
+/* === RESULT PANEL === */
+.result-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 28px;
+  margin-bottom: 24px;
+  display: none;
+}
+
+.result-panel.active { display: block; }
+
+/* === SIGNAL DISPLAY === */
+.signal-main {
+  text-align: center;
+  padding: 24px 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.signal-label {
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.signal-value {
+  font-family: var(--head);
+  font-size: clamp(3rem, 10vw, 5rem);
+  letter-spacing: 8px;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.signal-value.tai { color: var(--tai); text-shadow: 0 0 40px rgba(255,59,92,0.5); }
+.signal-value.xiu { color: var(--xiu); text-shadow: 0 0 40px rgba(0,212,255,0.5); }
+.signal-value.neutral { color: var(--gold); text-shadow: 0 0 40px rgba(240,180,41,0.5); }
+
+.signal-conf {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.signal-reason {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #8a9ab8;
+  line-height: 1.5;
+}
+
+/* === METRICS GRID === */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+@media (min-width: 600px) { .metrics-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.metric-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 14px;
+  text-align: center;
+}
+
+.metric-label {
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.metric-value.tai { color: var(--tai); }
+.metric-value.xiu { color: var(--xiu); }
+.metric-value.gold { color: var(--gold); }
+.metric-value.green { color: var(--green); }
+
+/* === SIGNAL BARS === */
+.signal-bars { margin-bottom: 24px; }
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.bar-label {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+.bar-fill.tai { background: linear-gradient(90deg, rgba(255,59,92,0.6), var(--tai)); }
+.bar-fill.xiu { background: linear-gradient(90deg, rgba(0,212,255,0.6), var(--xiu)); }
+.bar-fill.gold { background: linear-gradient(90deg, rgba(240,180,41,0.6), var(--gold)); }
+.bar-fill.green { background: linear-gradient(90deg, rgba(0,230,118,0.6), var(--green)); }
+
+.bar-pct {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  width: 44px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* === SIGNAL BREAKDOWN === */
+.signals-list { margin-bottom: 24px; }
+
+.signal-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  border: 1px solid transparent;
+}
+
+.signal-item.bullish-tai { background: rgba(255,59,92,0.06); border-color: rgba(255,59,92,0.15); }
+.signal-item.bullish-xiu { background: rgba(0,212,255,0.06); border-color: rgba(0,212,255,0.15); }
+.signal-item.neutral-sig { background: rgba(255,255,255,0.03); border-color: var(--border2); }
+
+.sig-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+.sig-body { flex: 1; }
+.sig-title { font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }
+.sig-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+.sig-verdict { font-family: var(--mono); font-size: 0.75rem; margin-top: 4px; }
+.sig-verdict.tai { color: var(--tai); }
+.sig-verdict.xiu { color: var(--xiu); }
+.sig-verdict.neutral { color: var(--gold); }
+
+/* === ALGORITHM THEORY === */
+.algo-theory {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.theory-section { margin-bottom: 20px; }
+.theory-section:last-child { margin-bottom: 0; }
+.theory-section h3 {
+  font-family: var(--head);
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.theory-section p, .theory-section li {
+  font-size: 0.85rem;
+  color: #8a9ab8;
+  line-height: 1.7;
+}
+.theory-section ul { padding-left: 20px; }
+.theory-section li { margin-bottom: 4px; }
+.formula {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  color: var(--xiu);
+  line-height: 1.8;
+}
+
+/* === HISTORY INPUT === */
+.history-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.history-add {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: end;
+}
+
+.history-add select {
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.btn-small {
+  padding: 10px 18px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-small:hover { background: rgba(255,255,255,0.1); }
+
+.history-tape {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 40px;
+  padding: 10px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+}
+
+.tape-item {
+  padding: 4px 10px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.tape-item.tai { background: rgba(255,59,92,0.2); color: var(--tai); border: 1px solid rgba(255,59,92,0.3); }
+.tape-item.xiu { background: rgba(0,212,255,0.15); color: var(--xiu); border: 1px solid rgba(0,212,255,0.25); }
+
+/* === TIMER WIDGET === */
+.timer-widget {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+}
+.timer-widget::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(0,212,255,0.03), transparent);
+  animation: shimmer 3s infinite;
+}
+@keyframes shimmer { 0%,100%{opacity:0} 50%{opacity:1} }
+
+.timer-phase {
+  font-family: var(--head);
+  font-size: 1.6rem;
+  letter-spacing: 4px;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+.timer-phase.betting { color: var(--green); text-shadow: 0 0 20px rgba(0,230,118,0.5); }
+.timer-phase.result  { color: var(--gold);  text-shadow: 0 0 20px rgba(240,180,41,0.5); }
+.timer-phase.waiting { color: var(--muted); }
+
+.timer-countdown {
+  font-family: var(--head);
+  font-size: 3.5rem;
+  letter-spacing: 6px;
+  line-height: 1;
+  min-width: 100px;
+  text-align: center;
+  flex-shrink: 0;
+  transition: color 0.3s;
+}
+.timer-countdown.betting { color: var(--green); text-shadow: 0 0 30px rgba(0,230,118,0.6); }
+.timer-countdown.betting.urgent { color: var(--tai); text-shadow: 0 0 30px rgba(255,59,92,0.7); animation: pulse-urgent 0.5s infinite alternate; }
+.timer-countdown.result  { color: var(--gold); text-shadow: 0 0 30px rgba(240,180,41,0.5); }
+.timer-countdown.waiting { color: var(--muted); }
+@keyframes pulse-urgent { from{opacity:1} to{opacity:0.5} }
+
+.timer-right { flex: 1; min-width: 200px; }
+
+.timer-progress-wrap {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 100px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.timer-progress-bar {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.9s linear, background 0.3s;
+}
+.timer-progress-bar.betting { background: linear-gradient(90deg, rgba(0,230,118,0.5), var(--green)); }
+.timer-progress-bar.betting.urgent { background: linear-gradient(90deg, rgba(255,59,92,0.5), var(--tai)); }
+.timer-progress-bar.result  { background: linear-gradient(90deg, rgba(240,180,41,0.4), var(--gold)); }
+
+.timer-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.timer-meta span { display: flex; align-items: center; gap: 5px; }
+.timer-meta b { color: var(--text); }
+
+.timer-tick-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.tick-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  transition: background 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+.tick-dot.active { background: var(--green); transform: scale(1.3); box-shadow: 0 0 6px var(--green); }
+.tick-dot.done   { background: rgba(0,230,118,0.3); }
+.tick-dot.result-dot { background: rgba(240,180,41,0.3); }
+.tick-dot.result-dot.active { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+
+/* === LOCK BADGE === */
+.lock-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 100px;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 1px; margin-top: 8px;
+}
+.lock-badge.locked { background: rgba(240,180,41,0.15); border: 1px solid rgba(240,180,41,0.4); color: var(--gold); }
+.lock-badge.waiting { background: rgba(74,96,128,0.15); border: 1px solid rgba(74,96,128,0.3); color: var(--muted); }
+
+/* === PREDICTION HISTORY TABLE === */
+.pred-history {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.pred-stats-row {
+  display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.pred-stat {
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border2);
+  border-radius: 4px; padding: 10px 16px; text-align: center; flex: 1; min-width: 80px;
+}
+.pred-stat .ps-label { font-size: 0.62rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.pred-stat .ps-val { font-family: var(--mono); font-size: 1.05rem; font-weight: 600; }
+.pred-table-wrap { overflow-x: auto; }
+.pred-table {
+  width: 100%; border-collapse: collapse; font-size: 0.78rem;
+}
+.pred-table th {
+  font-size: 0.62rem; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border);
+  text-align: left; white-space: nowrap;
+}
+.pred-table td {
+  padding: 8px 10px; border-bottom: 1px solid var(--border2);
+  font-family: var(--mono); white-space: nowrap;
+}
+.pred-table tr:last-child td { border-bottom: none; }
+.pred-table tr.correct td { background: rgba(0,230,118,0.04); }
+.pred-table tr.wrong td { background: rgba(255,59,92,0.04); }
+.pred-table tr.skip td { background: rgba(240,180,41,0.03); }
+.badge-correct { color: var(--green); font-weight: 700; }
+.badge-wrong { color: var(--tai); font-weight: 700; }
+.badge-skip { color: var(--gold); }
+.badge-tai { color: var(--tai); font-weight: 600; }
+.badge-xiu { color: var(--xiu); font-weight: 600; }
+.badge-lock { color: var(--gold); font-size: 0.68rem; }
+
+/* === DISCLAIMER === */
+.disclaimer {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.7;
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <h1>TÂM LÝ NHÀ CÁI</h1>
+    <p class="sub">House Psychology Prediction System — Phân Tích Dòng Tiền</p>
+  </header>
+
+  <!-- THEORY -->
+  <div class="theory-box">
+    <strong>📌 Nguyên lý cốt lõi:</strong> Nhà cái không gian lận — họ kiếm tiền từ <strong>rake/phí hoa hồng</strong>.
+    Khi quá nhiều tiền đổ vào một phía, nhà cái có động lực (qua RNG có trọng số) nghiêng về phía ít tiền hơn để cân bằng sách cái.
+    Đây là <strong>quản lý rủi ro tài chính hợp lệ</strong>, không phải gian lận.
+    Chiến lược: <strong>đặt ngược với đám đông tiền lớn</strong>.
+  </div>
+
+  <!-- TIMER WIDGET -->
+  <div class="timer-widget" id="timerWidget">
+    <div>
+      <div class="timer-phase waiting" id="timerPhase">CHỜ...</div>
+      <div style="font-family:var(--mono);font-size:0.65rem;color:var(--muted);margin-top:4px" id="timerPhaseLabel">Đang kết nối</div>
+    </div>
+    <div class="timer-countdown waiting" id="timerCountdown">--</div>
+    <div class="timer-right">
+      <div class="timer-progress-wrap">
+        <div class="timer-progress-bar waiting" id="timerBar" style="width:0%"></div>
+      </div>
+      <div class="timer-meta">
+        <span>PHIÊN <b id="tmSession">—</b></span>
+        <span>TICK <b id="tmTick">—</b></span>
+        <span>SUBTICK <b id="tmSubTick">—</b></span>
+        <span>TỔNG TIỀN <b id="tmTotal" style="color:var(--gold)">—</b></span>
+      </div>
+      <div class="timer-tick-dots" id="timerDots"></div>
+    </div>
+  </div>
+
+  <!-- INPUT DATA -->
+  <div class="sec-title">📡 NHẬP DỮ LIỆU PHIÊN</div>
+  <div class="input-panel">
+    <div class="input-grid">
+      <div class="field">
+        <label>💰 Tiền TAI (totalAmountPerType.TAI)</label>
+        <input type="number" id="amtTai" placeholder="120833726" />
+      </div>
+      <div class="field">
+        <label>💰 Tiền XIU (totalAmountPerType.XIU)</label>
+        <input type="number" id="amtXiu" placeholder="101487037" />
+      </div>
+      <div class="field">
+        <label>👥 Người TAI (totalUsersPerType.TAI)</label>
+        <input type="number" id="userTai" placeholder="269" />
+      </div>
+      <div class="field">
+        <label>👥 Người XIU (totalUsersPerType.XIU)</label>
+        <input type="number" id="userXiu" placeholder="277" />
+      </div>
+    </div>
+    <button class="btn-analyze" onclick="analyze()">⚡ PHÂN TÍCH TÂM LÝ NHÀ CÁI</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-panel" id="resultPanel">
+    <div class="signal-main">
+      <div class="signal-label">KẾT QUẢ DỰ ĐOÁN</div>
+      <div class="signal-value" id="mainSignal">—</div>
+      <div class="signal-conf" id="mainConf">—</div>
+      <div class="signal-reason" id="mainReason">—</div>
+      <div style="margin-top:10px">
+        <span class="lock-badge waiting" id="lockBadge">⏳ Chờ tín hiệu đủ mạnh...</span>
+      </div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Tổng Tiền TAI</div>
+        <div class="metric-value tai" id="mAmtTai">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Tổng Tiền XIU</div>
+        <div class="metric-value xiu" id="mAmtXiu">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Chênh Lệch Tiền</div>
+        <div class="metric-value gold" id="mDiff">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Avg Bet TAI vs XIU</div>
+        <div class="metric-value green" id="mAvgBet">—</div>
+      </div>
+    </div>
+
+    <!-- BARS -->
+    <div class="signal-bars">
+      <div class="bar-row">
+        <span class="bar-label">Tỉ lệ tiền TAI</span>
+        <div class="bar-track"><div class="bar-fill tai" id="barAmtTai" style="width:0%"></div></div>
+        <span class="bar-pct" id="pctAmtTai">0%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Tỉ lệ tiền XIU</span>
+        <div class="bar-track"><div class="bar-fill xiu" id="barAmtXiu" style="width:0%"></div></div>
+        <span class="bar-pct" id="pctAmtXiu">0%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Tỉ lệ người TAI</span>
+        <div class="bar-track"><div class="bar-fill tai" id="barUserTai" style="width:0%"></div></div>
+        <span class="bar-pct" id="pctUserTai">0%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Tỉ lệ người XIU</span>
+        <div class="bar-track"><div class="bar-fill xiu" id="barUserXiu" style="width:0%"></div></div>
+        <span class="bar-pct" id="pctUserXiu">0%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Áp lực nhà cái → XIU</span>
+        <div class="bar-track"><div class="bar-fill green" id="barPressure" style="width:50%"></div></div>
+        <span class="bar-pct" id="pctPressure">50%</span>
+      </div>
+    </div>
+
+    <!-- SIGNAL BREAKDOWN -->
+    <div class="sec-title" style="margin-bottom:12px">📐 PHÂN TÍCH CHI TIẾT</div>
+    <div class="signals-list" id="signalsList"></div>
+  </div>
+
+  <!-- PREDICTION HISTORY -->
+  <div class="sec-title">🎯 LỊCH SỬ DỰ ĐOÁN ĐÚNG/SAI</div>
+  <div class="pred-history">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-size:0.78rem;color:var(--muted)">Dữ liệu được lưu tự động vào máy (localStorage)</span>
+      <div style="display:flex;gap:8px">
+        <button onclick="fetchAnalysis()" class="btn-small" style="font-size:0.72rem;padding:6px 12px;color:var(--green);border-color:rgba(0,230,118,0.3)">🧠 Xem kết luận AI</button>
+        <button onclick="clearPredLog()" class="btn-small" style="font-size:0.72rem;padding:6px 12px;color:var(--tai);border-color:rgba(255,59,92,0.3)">🗑 Xóa lịch sử</button>
+      </div>
+    </div>
+    <div class="pred-stats-row">
+      <div class="pred-stat">
+        <div class="ps-label">Tổng phiên</div>
+        <div class="ps-val" id="psTotal" style="color:var(--text)">0</div>
+      </div>
+      <div class="pred-stat">
+        <div class="ps-label">Đúng</div>
+        <div class="ps-val" id="psCorrect" style="color:var(--green)">0</div>
+      </div>
+      <div class="pred-stat">
+        <div class="ps-label">Sai</div>
+        <div class="ps-val" id="psWrong" style="color:var(--tai)">0</div>
+      </div>
+      <div class="pred-stat">
+        <div class="ps-label">Bỏ qua</div>
+        <div class="ps-val" id="psSkip" style="color:var(--gold)">0</div>
+      </div>
+      <div class="pred-stat">
+        <div class="ps-label">Tỉ lệ đúng</div>
+        <div class="ps-val" id="psRate" style="color:var(--green)">—</div>
+      </div>
+      <div class="pred-stat">
+        <div class="ps-label">Streak hiện tại</div>
+        <div class="ps-val" id="psStreak" style="color:var(--gold)">—</div>
+      </div>
+    </div>
+    <div id="lockGroupStats" style="margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,0.02);border:1px solid var(--border2);border-radius:4px;font-family:var(--mono);font-size:0.8rem;line-height:2">
+      <span style="color:var(--muted)">Chưa đủ dữ liệu...</span>
+    </div>
+    <div id="analysisPanel" style="display:none;margin-bottom:16px;padding:16px;background:rgba(0,230,118,0.04);border:1px solid rgba(0,230,118,0.2);border-radius:4px;font-size:0.82rem;line-height:1.9">
+      <div id="analysisContent"></div>
+    </div>
+    <div class="pred-table-wrap">
+      <table class="pred-table">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>#Phiên</th>
+            <th>Khóa lúc</th>
+            <th>Dự đoán</th>
+            <th>Kết quả</th>
+            <th>Đúng/Sai</th>
+            <th>Confidence</th>
+            <th>TAI%</th>
+            <th>XIU%</th>
+          </tr>
+        </thead>
+        <tbody id="predTableBody">
+          <tr><td colspan="9" style="color:var(--muted);text-align:center;padding:20px">Chưa có dữ liệu — đang chờ kết quả phiên...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="sec-title">📜 LỊCH SỬ & PHÂN TÍCH CÂU</div>
+  <div class="history-panel">
+    <div style="font-size:0.82rem;color:var(--muted);margin-bottom:14px">
+      Nhập kết quả thực tế mỗi phiên để phân tích xu hướng nhà cái theo thời gian
+    </div>
+    <div class="history-add">
+      <div class="field" style="margin:0">
+        <label>Kết quả thực tế</label>
+        <select id="histResult">
+          <option value="TAI">TAI</option>
+          <option value="XIU">XIU</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0">
+        <label>Tiền chiếm ưu thế (bên nhiều tiền hơn)</label>
+        <select id="histDom">
+          <option value="TAI">TAI nhiều tiền hơn</option>
+          <option value="XIU">XIU nhiều tiền hơn</option>
+          <option value="EQUAL">Cân bằng</option>
+        </select>
+      </div>
+      <button class="btn-small" onclick="addHistory()">+ THÊM</button>
+    </div>
+    <div class="history-tape" id="histTape"><span style="color:var(--muted);font-size:0.8rem">Chưa có dữ liệu...</span></div>
+    <div id="histStats" style="margin-top:14px;font-size:0.83rem;color:var(--muted);line-height:1.8"></div>
+  </div>
+
+  <!-- ALGORITHM THEORY -->
+  <div class="sec-title">🧠 CÁC THUẬT TOÁN TÂM LÝ NHÀ CÁI</div>
+  <div class="algo-theory">
+
+    <div class="theory-section">
+      <h3>① MONEY PRESSURE THEORY (Áp lực dòng tiền)</h3>
+      <p>Nhà cái muốn trả ít nhất có thể. Khi 70%+ tiền vào TAI, nếu TAI thắng, nhà cái thua lớn. Logic tài chính: kết quả nghiêng về XIU để giảm thiểu payout.</p>
+      <div class="formula">
+        Áp lực XIU = amtTAI / (amtTAI + amtXIU)<br>
+        Ngưỡng tín hiệu: > 60% → nhà cái bị áp lực<br>
+        Ngưỡng mạnh: > 67% → tín hiệu đáng tin cậy<br>
+        Ngưỡng rất mạnh: > 75% → tín hiệu rất mạnh
+      </div>
+    </div>
+
+    <div class="theory-section">
+      <h3>② SMART MONEY vs DUMB MONEY (Tiền thông minh)</h3>
+      <p>Avg bet cao = người chơi VIP/pro. Nếu VIP đặt TAI nhưng số lượng ít (avg bet cao) — đây là "smart money". Nếu đám đông nhỏ lẻ đặt XIU (avg bet thấp) — "dumb money". Nhà cái thường cho dumb money thua.</p>
+      <div class="formula">
+        avgBet_TAI = amtTAI / userTAI<br>
+        avgBet_XIU = amtXIU / userXIU<br>
+        Ratio = avgBet_TAI / avgBet_XIU<br>
+        &gt; 1.5: TAI đang có "smart money" → theo TAI<br>
+        &lt; 0.67: XIU đang có "smart money" → theo XIU
+      </div>
+    </div>
+
+    <div class="theory-section">
+      <h3>③ CROWD PSYCHOLOGY TRAP (Bẫy đám đông)</h3>
+      <p>Khi &gt;60% người chơi đặt cùng một phía, hiệu ứng tâm lý bầy đàn cực mạnh. Nhà cái biết đám đông thường sai ở các điểm extreme. Đặt ngược đám đông khi tỉ lệ người > 65%.</p>
+      <div class="formula">
+        userRatio_TAI = userTAI / (userTAI + userXIU)<br>
+        Extreme crowd: &gt; 65% hoặc &lt; 35%<br>
+        → Đặt ngược phía đám đông
+      </div>
+    </div>
+
+    <div class="theory-section">
+      <h3>④ DIVERGENCE SIGNAL (Tín hiệu phân kỳ)</h3>
+      <p>Khi tiền và người không đồng thuận — VD: 60% người đặt TAI nhưng 60% tiền vào XIU — có "whale" đang thao túng. Theo dòng tiền (whale) chứ không phải số người.</p>
+      <div class="formula">
+        Divergence = |pctAmt_TAI - pctUser_TAI|<br>
+        &gt; 10%: Có whale — theo bên có tiền nhiều hơn (tương đối)<br>
+        &gt; 20%: Whale rất mạnh — tín hiệu cực kỳ đáng tin
+      </div>
+    </div>
+
+    <div class="theory-section">
+      <h3>⑤ RAKE OPTIMIZATION (Tối ưu hoa hồng)</h3>
+      <p>Nhà cái ăn rake = phần trăm tổng cược bất kể ai thắng. Nhưng khi lệch tiền > 30%, rủi ro thanh khoản xuất hiện. Nhà cái có hệ thống điều chỉnh để tránh rủi ro này.</p>
+      <div class="formula">
+        Imbalance = |amtTAI - amtXIU| / (amtTAI + amtXIU)<br>
+        &lt; 10%: Cân bằng — tín hiệu yếu, bất kỳ bên nào cũng có thể<br>
+        10-25%: Lệch vừa — tín hiệu trung bình<br>
+        &gt; 25%: Lệch nặng — nhà cái bị áp lực mạnh
+      </div>
+    </div>
+
+    <div class="theory-section">
+      <h3>⑥ COMPOSITE SCORE (Điểm tổng hợp)</h3>
+      <div class="formula">
+        score_XIU += moneyPressure × 40%<br>
+        score_XIU += crowdTrap × 30%<br>
+        score_XIU += smartMoney × 20%<br>
+        score_XIU += divergence × 10%<br>
+        ——————————————<br>
+        score &gt; 0.60 → DỰ ĐOÁN NGƯỢC BÊN NHIỀU TIỀN<br>
+        score &gt; 0.75 → TÍN HIỆU MẠNH<br>
+        score &gt; 0.85 → TÍN HIỆU RẤT MẠNH
+      </div>
+    </div>
+
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ Công cụ phân tích thống kê và lý thuyết tài chính. Không đảm bảo kết quả.<br>
+    Nhà cái có thể sử dụng nhiều cơ chế phức tạp hơn. Chơi có trách nhiệm.
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// HISTORY DATA
+// ============================================================
+let historyRecords = [];
+
+function addHistory() {
+  const result = document.getElementById('histResult').value;
+  const dominant = document.getElementById('histDom').value;
+  historyRecords.unshift({ result, dominant, time: Date.now() });
+  renderHistory();
+}
+
+function renderHistory() {
+  const tape = document.getElementById('histTape');
+  const stats = document.getElementById('histStats');
+
+  if (historyRecords.length === 0) {
+    tape.innerHTML = '<span style="color:var(--muted);font-size:0.8rem">Chưa có dữ liệu...</span>';
+    stats.innerHTML = '';
+    return;
+  }
+
+  tape.innerHTML = historyRecords.slice(0, 50).map(r => {
+    const cls = r.result === 'TAI' ? 'tai' : 'xiu';
+    return `<span class="tape-item ${cls}">${r.result}</span>`;
+  }).join('');
+
+  // Stats: tỉ lệ nhà cái cho bên ít tiền thắng
+  const withData = historyRecords.filter(r => r.dominant !== 'EQUAL');
+  if (withData.length < 3) { stats.innerHTML = 'Cần thêm dữ liệu để phân tích...'; return; }
+
+  // Khi dominant = TAI (nhiều tiền TAI) → nhà cái nên cho XIU thắng
+  const correctPredictions = withData.filter(r => r.result !== r.dominant).length;
+  const rate = (correctPredictions / withData.length * 100).toFixed(1);
+
+  // Streak analysis
+  let maxStreak = 0, curStreak = 0, lastVal = null;
+  for (const r of historyRecords) {
+    if (r.result === lastVal) { curStreak++; maxStreak = Math.max(maxStreak, curStreak); }
+    else { curStreak = 1; lastVal = r.result; }
+  }
+
+  const taiCount = historyRecords.filter(r => r.result === 'TAI').length;
+  const xiuCount = historyRecords.filter(r => r.result === 'XIU').length;
+
+  stats.innerHTML = `
+    <span style="color:var(--gold)">Lý thuyết nhà cái cho bên ít tiền thắng:</span>
+    <span style="color:var(--green);margin-left:8px">✓ Đúng ${correctPredictions}/${withData.length} = <strong>${rate}%</strong></span>
+    &nbsp;|&nbsp; TAI: <span style="color:var(--tai)">${taiCount}</span>
+    &nbsp;|&nbsp; XIU: <span style="color:var(--xiu)">${xiuCount}</span>
+    &nbsp;|&nbsp; Bệt dài nhất: <span style="color:var(--gold)">${maxStreak}</span>
+  `;
+}
+
+// ============================================================
+// MAIN ANALYSIS ENGINE
+// ============================================================
+function analyze() {
+  const amtTai  = parseFloat(document.getElementById('amtTai').value)  || 0;
+  const amtXiu  = parseFloat(document.getElementById('amtXiu').value)  || 0;
+  const userTai = parseFloat(document.getElementById('userTai').value) || 0;
+  const userXiu = parseFloat(document.getElementById('userXiu').value) || 0;
+
+  if (amtTai <= 0 || amtXiu <= 0) {
+    alert('Vui lòng nhập số tiền TAI và XIU!');
+    return;
+  }
+
+  const totalAmt  = amtTai + amtXiu;
+  const totalUser = userTai + userXiu;
+
+  // === CORE METRICS ===
+  const pctAmtTai  = amtTai  / totalAmt * 100;
+  const pctAmtXiu  = amtXiu  / totalAmt * 100;
+  const pctUserTai = totalUser > 0 ? userTai / totalUser * 100 : 50;
+  const pctUserXiu = totalUser > 0 ? userXiu / totalUser * 100 : 50;
+  const avgBetTai  = userTai > 0 ? amtTai  / userTai  : 0;
+  const avgBetXiu  = userXiu > 0 ? amtXiu  / userXiu  : 0;
+  const imbalance  = Math.abs(amtTai - amtXiu) / totalAmt;
+  const divergence = Math.abs(pctAmtTai - pctUserTai) / 100;
+
+  // === SIGNAL COMPUTATIONS ===
+  const signals = [];
+  let scoreTowardMinorSide = 0; // score để dự đoán bên ít tiền hơn thắng
+
+  // --- SIGNAL 1: Money Pressure ---
+  const majorMoney = pctAmtTai > pctAmtXiu ? 'TAI' : 'XIU';
+  const minorMoney = majorMoney === 'TAI' ? 'XIU' : 'TAI';
+  const majorPct   = Math.max(pctAmtTai, pctAmtXiu);
+  let mp_score = 0, mp_strength = '';
+
+  if (majorPct > 75) { mp_score = 0.90; mp_strength = 'Rất mạnh 🔥'; }
+  else if (majorPct > 67) { mp_score = 0.75; mp_strength = 'Mạnh'; }
+  else if (majorPct > 60) { mp_score = 0.55; mp_strength = 'Vừa'; }
+  else if (majorPct > 55) { mp_score = 0.35; mp_strength = 'Yếu'; }
+  else { mp_score = 0.10; mp_strength = 'Rất yếu (cân bằng)'; }
+
+  scoreTowardMinorSide += mp_score * 0.40;
+  const mp_class = mp_score > 0.50 ? `bullish-${minorMoney.toLowerCase()}` : 'neutral-sig';
+  signals.push({
+    icon: '💰',
+    title: `Áp lực dòng tiền — Money Pressure`,
+    desc: `${majorMoney} chiếm ${majorPct.toFixed(1)}% tổng tiền. Nhà cái bị áp lực ${majorPct.toFixed(1)}% nếu ${majorMoney} thắng.`,
+    verdict: mp_score > 0.40 ? `→ Nhà cái muốn ${minorMoney} thắng (${mp_strength})` : `→ Tín hiệu yếu — cân bằng`,
+    verdictClass: mp_score > 0.40 ? minorMoney.toLowerCase() : 'neutral',
+    cls: mp_class
+  });
+
+  // --- SIGNAL 2: Smart Money ---
+  let sm_score = 0, sm_favor = null;
+  if (avgBetTai > 0 && avgBetXiu > 0) {
+    const ratio = avgBetTai / avgBetXiu;
+    if (ratio > 2.0)      { sm_score = 0.85; sm_favor = 'TAI'; }
+    else if (ratio > 1.5) { sm_score = 0.65; sm_favor = 'TAI'; }
+    else if (ratio > 1.2) { sm_score = 0.40; sm_favor = 'TAI'; }
+    else if (ratio < 0.5) { sm_score = 0.85; sm_favor = 'XIU'; }
+    else if (ratio < 0.67){ sm_score = 0.65; sm_favor = 'XIU'; }
+    else if (ratio < 0.83){ sm_score = 0.40; sm_favor = 'XIU'; }
+    else { sm_score = 0.10; sm_favor = null; }
+  }
+
+  // Smart money → theo smart money (không phải ngược)
+  if (sm_favor) {
+    if (sm_favor === minorMoney) scoreTowardMinorSide += sm_score * 0.20;
+    else scoreTowardMinorSide -= sm_score * 0.10;
+  }
+
+  const fmtAmt = v => v >= 1e9 ? (v/1e9).toFixed(2)+'B' : v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v.toFixed(0);
+  signals.push({
+    icon: '🐋',
+    title: 'Smart Money vs Dumb Money',
+    desc: `Avg bet TAI: ${fmtAmt(avgBetTai)} | Avg bet XIU: ${fmtAmt(avgBetXiu)}. ${sm_favor ? `"Smart money" đang ở phía ${sm_favor}.` : 'Avg bet tương đương — không phân biệt được.'}`,
+    verdict: sm_favor ? `→ Whale đang đặt ${sm_favor} — cân nhắc theo ${sm_favor}` : '→ Không rõ smart money',
+    verdictClass: sm_favor ? sm_favor.toLowerCase() : 'neutral',
+    cls: sm_favor ? `bullish-${sm_favor.toLowerCase()}` : 'neutral-sig'
+  });
+
+  // --- SIGNAL 3: Crowd Trap ---
+  const majorCrowd = pctUserTai > pctUserXiu ? 'TAI' : 'XIU';
+  const majorCrowdPct = Math.max(pctUserTai, pctUserXiu);
+  let ct_score = 0;
+  if (majorCrowdPct > 65)      ct_score = 0.80;
+  else if (majorCrowdPct > 60) ct_score = 0.55;
+  else if (majorCrowdPct > 55) ct_score = 0.30;
+  else ct_score = 0.05;
+
+  const minorCrowd = majorCrowd === 'TAI' ? 'XIU' : 'TAI';
+  if (minorCrowd === minorMoney) scoreTowardMinorSide += ct_score * 0.30;
+  else scoreTowardMinorSide += ct_score * 0.10;
+
+  signals.push({
+    icon: '🐑',
+    title: 'Bẫy đám đông — Crowd Psychology Trap',
+    desc: `${majorCrowd} có ${majorCrowdPct.toFixed(1)}% số người đặt. Đám đông tập trung cực đoan thường bị "bẫy".`,
+    verdict: ct_score > 0.50 ? `→ Đám đông theo ${majorCrowd} — nhà cái có thể bẫy → ${minorCrowd} thắng` : '→ Đám đông không đủ extreme',
+    verdictClass: ct_score > 0.50 ? minorCrowd.toLowerCase() : 'neutral',
+    cls: ct_score > 0.50 ? `bullish-${minorCrowd.toLowerCase()}` : 'neutral-sig'
+  });
+
+  // --- SIGNAL 4: Divergence ---
+  const div_pct = divergence * 100;
+  let div_score = 0, div_favor = null;
+  if (div_pct > 20) { div_score = 0.80; div_favor = majorMoney; }       // Theo tiền (whale đẩy tiền 1 bên)
+  else if (div_pct > 10) { div_score = 0.50; div_favor = majorMoney; }
+  else { div_score = 0.10; }
+
+  if (div_favor === minorMoney) scoreTowardMinorSide += div_score * 0.10;
+  else if (div_favor) scoreTowardMinorSide -= div_score * 0.05;
+
+  signals.push({
+    icon: '📊',
+    title: 'Phân kỳ Tiền/Người — Divergence Signal',
+    desc: `Tiền TAI: ${pctAmtTai.toFixed(1)}% | Người TAI: ${pctUserTai.toFixed(1)}%. Phân kỳ: ${div_pct.toFixed(1)}%.${div_pct > 10 ? ` Có whale đang thao túng dòng tiền về ${majorMoney}.` : ''}`,
+    verdict: div_score > 0.40 ? `→ Whale dồn tiền vào ${majorMoney} — theo tiền whale` : '→ Không có phân kỳ đáng kể',
+    verdictClass: div_favor ? div_favor.toLowerCase() : 'neutral',
+    cls: div_score > 0.40 ? `bullish-${(div_favor||'neutral').toLowerCase()}` : 'neutral-sig'
+  });
+
+  // --- SIGNAL 5: Imbalance Risk ---
+  let ib_score = 0;
+  if (imbalance > 0.35)      ib_score = 0.90;
+  else if (imbalance > 0.25) ib_score = 0.70;
+  else if (imbalance > 0.15) ib_score = 0.45;
+  else if (imbalance > 0.08) ib_score = 0.25;
+  else ib_score = 0.05;
+
+  signals.push({
+    icon: '⚖️',
+    title: 'Rủi ro mất cân bằng — Imbalance Risk',
+    desc: `Độ lệch: ${(imbalance * 100).toFixed(1)}%. ${imbalance > 0.25 ? 'Lệch nặng — nhà cái phải điều chỉnh để tránh rủi ro thanh khoản.' : imbalance > 0.15 ? 'Lệch vừa phải.' : 'Tương đối cân bằng — nhà cái ít bị áp lực.'}`,
+    verdict: ib_score > 0.60 ? `→ Áp lực lớn → nghiêng về ${minorMoney}` : ib_score > 0.30 ? `→ Áp lực trung bình → hơi nghiêng về ${minorMoney}` : '→ Cân bằng — ít tín hiệu',
+    verdictClass: ib_score > 0.30 ? minorMoney.toLowerCase() : 'neutral',
+    cls: ib_score > 0.50 ? `bullish-${minorMoney.toLowerCase()}` : 'neutral-sig'
+  });
+
+  // === FINAL DECISION ===
+  // scoreTowardMinorSide: xác suất bên ít tiền hơn thắng
+  const finalScore = Math.max(0, Math.min(1, 0.50 + scoreTowardMinorSide));
+  let prediction, confidence, confLabel;
+
+  if (finalScore > 0.72) {
+    prediction = minorMoney;
+    confidence = finalScore;
+    confLabel = 'TÍN HIỆU RẤT MẠNH';
+  } else if (finalScore > 0.60) {
+    prediction = minorMoney;
+    confidence = finalScore;
+    confLabel = 'Tín hiệu mạnh';
+  } else if (finalScore > 0.52) {
+    prediction = minorMoney;
+    confidence = finalScore;
+    confLabel = 'Tín hiệu vừa';
+  } else if (finalScore < 0.48) {
+    prediction = majorMoney;
+    confidence = 1 - finalScore;
+    confLabel = 'Thị trường nghiêng (không theo lý thuyết)';
+  } else {
+    prediction = 'SKIP';
+    confidence = 0.50;
+    confLabel = 'Tín hiệu quá yếu — nên bỏ qua';
+  }
+
+  // === RENDER ===
+  const panel = document.getElementById('resultPanel');
+  panel.classList.add('active');
+
+  const sv = document.getElementById('mainSignal');
+  sv.textContent = prediction;
+  sv.className = 'signal-value ' + (prediction === 'TAI' ? 'tai' : prediction === 'XIU' ? 'xiu' : 'neutral');
+
+  document.getElementById('mainConf').textContent =
+    `Confidence: ${(confidence * 100).toFixed(1)}% — ${confLabel}`;
+
+  document.getElementById('mainReason').textContent =
+    prediction !== 'SKIP'
+      ? `Nhà cái bị áp lực mạnh bởi ${majorMoney} (${(Math.max(pctAmtTai,pctAmtXiu)).toFixed(1)}% tiền). Lý thuyết: ${prediction} có khả năng thắng cao hơn để nhà cái tối ưu payout.`
+      : 'Dòng tiền quá cân bằng hoặc tín hiệu mâu thuẫn — không nên đặt cược phiên này.';
+
+  // Metrics
+  document.getElementById('mAmtTai').textContent = fmtAmt(amtTai);
+  document.getElementById('mAmtXiu').textContent = fmtAmt(amtXiu);
+  const diff = Math.abs(amtTai - amtXiu);
+  document.getElementById('mDiff').textContent = `${fmtAmt(diff)} (${(imbalance*100).toFixed(1)}%)`;
+  const avgRatio = avgBetTai > 0 && avgBetXiu > 0 ? (avgBetTai/avgBetXiu).toFixed(2) : '—';
+  document.getElementById('mAvgBet').textContent = `${avgRatio}x`;
+
+  // Bars
+  setTimeout(() => {
+    document.getElementById('barAmtTai').style.width  = pctAmtTai + '%';
+    document.getElementById('barAmtXiu').style.width  = pctAmtXiu + '%';
+    document.getElementById('barUserTai').style.width = (totalUser > 0 ? pctUserTai : 50) + '%';
+    document.getElementById('barUserXiu').style.width = (totalUser > 0 ? pctUserXiu : 50) + '%';
+    document.getElementById('barPressure').style.width = (finalScore * 100) + '%';
+  }, 50);
+
+  document.getElementById('pctAmtTai').textContent  = pctAmtTai.toFixed(1)  + '%';
+  document.getElementById('pctAmtXiu').textContent  = pctAmtXiu.toFixed(1)  + '%';
+  document.getElementById('pctUserTai').textContent = (totalUser > 0 ? pctUserTai : 50).toFixed(1) + '%';
+  document.getElementById('pctUserXiu').textContent = (totalUser > 0 ? pctUserXiu : 50).toFixed(1) + '%';
+  document.getElementById('pctPressure').textContent = (finalScore * 100).toFixed(0) + '%';
+
+  // Signals list
+  const list = document.getElementById('signalsList');
+  list.innerHTML = signals.map(s => `
+    <div class="signal-item ${s.cls}">
+      <span class="sig-icon">${s.icon}</span>
+      <div class="sig-body">
+        <div class="sig-title">${s.title}</div>
+        <div class="sig-desc">${s.desc}</div>
+        <div class="sig-verdict ${s.verdictClass}">${s.verdict}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Scroll to result chỉ khi nhấn tay (không scroll khi live auto-analyze)
+  if (!liveAutoAnalyze || !sseSource || sseSource.readyState !== 1) {
+    setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+}
+
+// Demo data on load
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('amtTai').value  = '120833726';
+  document.getElementById('amtXiu').value  = '101487037';
+  document.getElementById('userTai').value = '269';
+  document.getElementById('userXiu').value = '277';
+  initLive();
+  renderPredictionHistory();
+});
+
+// ============================================================
+// LIVE DATA — SSE từ server Node.js
+// ============================================================
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? `http://${window.location.hostname}:${window.location.port || 3000}`
+  : window.location.origin;
+
+let liveSessionId = null;
+let liveAutoAnalyze = true;
+let liveResultHistory = [];
+let sseSource = null;
+
+// ============================================================
+// SMART LOCK ENGINE
+// ============================================================
+let lockState = {
+  locked: false, prediction: null, confidence: 0,
+  lockSubTick: null, taiPctAtLock: 0, xiuPctAtLock: 0,
+  sessionId: null, signalHistory: []
+};
+let predictionLog = (() => { try { return JSON.parse(localStorage.getItem('predLog') || '[]'); } catch { return []; } })();
+
+function trySmartLock(prediction, confidence, subTick, taiPct, xiuPct, sessionId) {
+  const _sid = +sessionId;
+  if (lockState.locked && +lockState.sessionId === _sid) return;
+  if (+lockState.sessionId !== _sid) {
+    lockState = { locked: false, prediction: null, confidence: 0, lockSubTick: null,
+      taiPctAtLock: 0, xiuPctAtLock: 0, sessionId: _sid, signalHistory: [] };
+  }
+  lockState.signalHistory.push({ subTick, prediction, confidence });
+  if (lockState.signalHistory.length > 15) lockState.signalHistory.shift();
+
+  const confPct = confidence * 100;
+  function isStable(n) {
+    const recent = lockState.signalHistory.slice(-n);
+    if (recent.length < n) return false;
+    return recent.every(s => s.prediction === prediction && s.confidence >= confidence * 0.92);
+  }
+
+  // Thuật toán gốc + rule thêm: tới 5s mà conf < 60% → SKIP
+  let shouldLock = false, lockReason = '';
+
+  if (confPct >= 78 && subTick >= 8 && isStable(3)) {
+    shouldLock = true; lockReason = `🔥 Tín hiệu rất mạnh — khóa sớm (${subTick}s)`;
+  } else if (confPct >= 62 && subTick >= 5 && isStable(2)) {
+    shouldLock = true; lockReason = `✅ Tín hiệu mạnh ổn định — khóa tại ${subTick}s`;
+  } else if (subTick <= 5 && prediction !== 'SKIP' && confPct >= 60) {
+    // Tới 5s, conf đủ → khóa
+    shouldLock = true; lockReason = `⏱ Khóa tại ${subTick}s — conf ${confPct.toFixed(0)}%`;
+  } else if (subTick <= 5 && (confPct < 60 || prediction === 'SKIP')) {
+    // Tới 5s mà conf < 60% hoặc SKIP → bỏ qua phiên này
+    lockState.locked = true;
+    lockState.prediction = 'SKIP';
+    lockState.confidence = 0.5;
+    lockState.lockSubTick = subTick;
+    lockState.taiPctAtLock = taiPct;
+    lockState.xiuPctAtLock = xiuPct;
+    const badge = document.getElementById('lockBadge');
+    if (badge) { badge.className = 'lock-badge waiting'; badge.textContent = `⛔ SKIP — conf ${confPct.toFixed(0)}% < 60% tại ${subTick}s`; }
+    return;
+  }
+
+  if (shouldLock) {
+    lockState.locked = true;
+    lockState.prediction = prediction;
+    lockState.confidence = confidence;
+    lockState.lockSubTick = subTick;
+    lockState.taiPctAtLock = taiPct;
+    lockState.xiuPctAtLock = xiuPct;
+    const badge = document.getElementById('lockBadge');
+    if (badge) { badge.className = 'lock-badge locked'; badge.textContent = `🔒 KHÓA tại ${subTick}s — ${lockReason}`; }
+    const panel = document.getElementById('resultPanel');
+    if (panel) {
+      const col = prediction === 'TAI' ? 'rgba(255,59,92,0.35)' : prediction === 'XIU' ? 'rgba(0,212,255,0.35)' : 'rgba(240,180,41,0.35)';
+      panel.style.borderColor = col; panel.style.boxShadow = `0 0 28px ${col}`;
+    }
+  } else {
+    const badge = document.getElementById('lockBadge');
+    if (badge && !lockState.locked) {
+      const stableCount = lockState.signalHistory.filter(s => s.prediction === prediction).length;
+      badge.className = 'lock-badge waiting';
+      const confColor = confPct >= 62 ? '🟢' : confPct >= 55 ? '🟡' : '🔴';
+      badge.textContent = `⏳ ${confColor} conf ${confPct.toFixed(0)}% | còn ${subTick}s | ổn ${stableCount} tick`;
+    }
+  }
+}
+
+function resetLock(newSessionId) {
+  lockState = { locked: false, prediction: null, confidence: 0, lockSubTick: null,
+    taiPctAtLock: 0, xiuPctAtLock: 0, sessionId: newSessionId, signalHistory: [] };
+  const badge = document.getElementById('lockBadge');
+  if (badge) { badge.className = 'lock-badge waiting'; badge.textContent = '⏳ Phiên mới — chờ tín hiệu...'; }
+  const panel = document.getElementById('resultPanel');
+  if (panel) { panel.style.borderColor = ''; panel.style.boxShadow = ''; }
+  // Reset timer
+  timerState = { phase: 'waiting', subTick: 0, tick: 0, sessionId: newSessionId, totalAmt: 0 };
+  const phaseEl = document.getElementById('timerPhase');
+  if (phaseEl) { phaseEl.textContent = 'PHIÊN MỚI'; phaseEl.className = 'timer-phase waiting'; }
+  const cdEl = document.getElementById('timerCountdown');
+  if (cdEl) { cdEl.textContent = '--'; cdEl.className = 'timer-countdown waiting'; }
+}
+
+function recordPredictionResult(sessionId, actualResult) {
+  const sid = +sessionId; // chuẩn hóa về number
+  if (!lockState.locked || +lockState.sessionId !== sid) return;
+  sessionId = sid;
+  const pred = lockState.prediction;
+  const correct = pred === 'SKIP' ? null : pred === actualResult;
+  predictionLog.unshift({
+    sessionId, prediction: pred, confidence: lockState.confidence,
+    lockSubTick: lockState.lockSubTick, taiPct: lockState.taiPctAtLock,
+    xiuPct: lockState.xiuPctAtLock, result: actualResult, correct, time: Date.now()
+  });
+  if (predictionLog.length > 100) predictionLog.pop();
+  try { localStorage.setItem('predLog', JSON.stringify(predictionLog)); } catch {}
+  // Lưu lên server (file predictions-log.jsonl)
+  try {
+    fetch(API_BASE + '/save-prediction', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(predictionLog[0])
+    }).catch(() => {});
+  } catch {}
+  renderPredictionHistory();
+}
+
+function fetchAnalysis() {
+  const panel = document.getElementById('analysisPanel');
+  const content = document.getElementById('analysisContent');
+  panel.style.display = 'block';
+  content.innerHTML = '<span style="color:var(--muted)">⏳ Đang phân tích...</span>';
+  fetch(API_BASE + '/analyze-predictions')
+    .then(r => r.json())
+    .then(data => {
+      if (data.status !== 'ok') {
+        content.innerHTML = '<span style="color:var(--gold)">⚠️ ' + (data.message || 'Chưa đủ dữ liệu') + '</span>';
+        return;
+      }
+      const fmtGroup = (arr) => arr.filter(g => g.count > 0).map(g =>
+        '<span style="margin-right:16px">' + g.label + ': <b style="color:' +
+        (g.rate >= 60 ? 'var(--green)' : g.rate >= 50 ? 'var(--gold)' : 'var(--tai)') +
+        '">' + (g.rate !== null ? g.rate + '%' : '—') + '</b> <span style="color:var(--muted);font-size:0.72rem">(' + g.correct + '/' + g.count + ')</span></span>'
+      ).join('');
+
+      content.innerHTML =
+        '<div style="margin-bottom:10px;font-family:var(--head);font-size:1rem;letter-spacing:2px;color:var(--gold)">KẾT LUẬN PHÂN TÍCH — ' + data.summary.judged + ' PHIÊN</div>' +
+        '<div style="margin-bottom:8px"><b style="color:var(--muted)">⏱ Theo thời điểm khóa:</b><br>' + fmtGroup(data.byLockTime) + '</div>' +
+        '<div style="margin-bottom:8px"><b style="color:var(--muted)">📊 Theo confidence:</b><br>' + fmtGroup(data.byConfidence) + '</div>' +
+        '<div style="margin-bottom:12px"><b style="color:var(--muted)">💰 Theo độ lệch tiền:</b><br>' + fmtGroup(data.byMoneyImbalance) + '</div>' +
+        '<div style="border-top:1px solid var(--border);padding-top:10px">' +
+        data.conclusions.map(s => '<div style="margin-bottom:4px">' + s + '</div>').join('') +
+        '</div>' +
+        '<div style="margin-top:8px;font-size:0.68rem;color:var(--muted)">Cập nhật: ' + new Date(data.generatedAt).toLocaleString('vi-VN') + '</div>';
+    })
+    .catch(() => { content.innerHTML = '<span style="color:var(--tai)">❌ Không kết nối được server</span>'; });
+}
+
+function clearPredLog() {
+  if (!confirm('Xóa toàn bộ lịch sử dự đoán?')) return;
+  predictionLog = [];
+  try { localStorage.removeItem('predLog'); } catch {}
+  renderPredictionHistory();
+}
+
+function renderPredictionHistory() {
+  const tbody = document.getElementById('predTableBody');
+  if (!tbody) return;
+  const judged = predictionLog.filter(p => p.correct !== null);
+  const correct = judged.filter(p => p.correct).length;
+  const wrong = judged.filter(p => !p.correct).length;
+  const skipped = predictionLog.filter(p => p.correct === null).length;
+  const rate = judged.length > 0 ? (correct / judged.length * 100).toFixed(1) : '—';
+  let streak = 0, streakType = null;
+  for (const p of judged) {
+    if (streakType === null) { streakType = p.correct; streak = 1; }
+    else if (p.correct === streakType) streak++;
+    else break;
+  }
+  const streakLabel = judged.length === 0 ? '—' : `${streakType ? '✅' : '❌'} ${streak}`;
+  document.getElementById('psTotal').textContent = predictionLog.length;
+  document.getElementById('psCorrect').textContent = correct;
+  document.getElementById('psWrong').textContent = wrong;
+  document.getElementById('psSkip').textContent = skipped;
+  document.getElementById('psRate').textContent = judged.length > 0 ? `${rate}%` : '—';
+  document.getElementById('psStreak').textContent = streakLabel;
+
+  // Phân tích theo nhóm thời điểm khóa
+  const groups = [
+    { label: '🔥 Sớm (≥8s)', filter: p => p.lockSubTick >= 8 },
+    { label: '✅ Vừa (5-7s)', filter: p => p.lockSubTick >= 5 && p.lockSubTick < 8 },
+    { label: '⏱ Muộn (3-4s)', filter: p => p.lockSubTick >= 3 && p.lockSubTick < 5 },
+  ];
+  const lockStatsEl = document.getElementById('lockGroupStats');
+  if (lockStatsEl) {
+    const rows = groups.map(g => {
+      const gJudged = judged.filter(g.filter);
+      if (gJudged.length === 0) return `<span style="color:var(--muted);margin-right:20px">${g.label}: <b>—</b></span>`;
+      const gCorrect = gJudged.filter(p => p.correct).length;
+      const gRate = (gCorrect / gJudged.length * 100).toFixed(0);
+      const col = +gRate >= 60 ? 'var(--green)' : +gRate >= 50 ? 'var(--gold)' : 'var(--tai)';
+      return `<span style="margin-right:20px">${g.label}: <b style="color:${col}">${gRate}%</b> <span style="color:var(--muted);font-size:0.72rem">(${gCorrect}/${gJudged.length})</span></span>`;
+    }).join('');
+    lockStatsEl.innerHTML = rows || '<span style="color:var(--muted)">Chưa đủ dữ liệu...</span>';
+  }
+  if (predictionLog.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:20px">Chưa có dữ liệu — đang chờ kết quả phiên...</td></tr>';
+    return;
+  }
+  tbody.innerHTML = predictionLog.slice(0, 50).map(p => {
+    const rowCls = p.correct === null ? 'skip' : p.correct ? 'correct' : 'wrong';
+    const predCls = p.prediction === 'TAI' ? 'badge-tai' : p.prediction === 'XIU' ? 'badge-xiu' : 'badge-skip';
+    const resCls = p.result === 'TAI' ? 'badge-tai' : 'badge-xiu';
+    const verdict = p.correct === null ? '<span class="badge-skip">— SKIP</span>'
+      : p.correct ? '<span class="badge-correct">✓ ĐÚNG</span>'
+      : '<span class="badge-wrong">✗ SAI</span>';
+    const confColor = p.confidence * 100 > 72 ? 'var(--green)' : p.confidence * 100 > 60 ? 'var(--gold)' : 'var(--muted)';
+    return `<tr class="${rowCls}">
+      <td style="color:var(--muted);font-size:0.72rem">${p.time ? new Date(p.time).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '—'}</td>
+      <td style="color:var(--muted)">#${p.sessionId}</td>
+      <td><span class="badge-lock">🔒 ${p.lockSubTick}s</span></td>
+      <td><span class="${predCls}">${p.prediction}</span></td>
+      <td><span class="${resCls}">${p.result}</span></td>
+      <td>${verdict}</td>
+      <td style="color:${confColor}">${(p.confidence*100).toFixed(1)}%</td>
+      <td style="color:var(--tai)">${p.taiPct.toFixed(1)}%</td>
+      <td style="color:var(--xiu)">${p.xiuPct.toFixed(1)}%</td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// ANALYZE AND RETURN (dùng cho smart lock, không alert/scroll)
+// ============================================================
+function analyzeAndReturn() {
+  const amtTai  = parseFloat(document.getElementById('amtTai').value)  || 0;
+  const amtXiu  = parseFloat(document.getElementById('amtXiu').value)  || 0;
+  const userTai = parseFloat(document.getElementById('userTai').value) || 0;
+  const userXiu = parseFloat(document.getElementById('userXiu').value) || 0;
+  if (amtTai <= 0 || amtXiu <= 0) return null;
+  const totalAmt = amtTai + amtXiu;
+  const totalUser = userTai + userXiu;
+  const pctAmtTai = amtTai / totalAmt * 100;
+  const pctAmtXiu = amtXiu / totalAmt * 100;
+  const pctUserTai = totalUser > 0 ? userTai / totalUser * 100 : 50;
+  const avgBetTai = userTai > 0 ? amtTai / userTai : 0;
+  const avgBetXiu = userXiu > 0 ? amtXiu / userXiu : 0;
+  const imbalance = Math.abs(amtTai - amtXiu) / totalAmt;
+  const divergence = Math.abs(pctAmtTai - pctUserTai) / 100;
+  const majorMoney = pctAmtTai > pctAmtXiu ? 'TAI' : 'XIU';
+  const minorMoney = majorMoney === 'TAI' ? 'XIU' : 'TAI';
+  const majorPct = Math.max(pctAmtTai, pctAmtXiu);
+  let scoreTowardMinorSide = 0;
+  const mp_score = majorPct > 75 ? 0.90 : majorPct > 67 ? 0.75 : majorPct > 60 ? 0.55 : majorPct > 55 ? 0.35 : 0.10;
+  scoreTowardMinorSide += mp_score * 0.40;
+  let sm_score = 0, sm_favor = null;
+  if (avgBetTai > 0 && avgBetXiu > 0) {
+    const ratio = avgBetTai / avgBetXiu;
+    if (ratio > 2.0) { sm_score = 0.85; sm_favor = 'TAI'; }
+    else if (ratio > 1.5) { sm_score = 0.65; sm_favor = 'TAI'; }
+    else if (ratio < 0.5) { sm_score = 0.85; sm_favor = 'XIU'; }
+    else if (ratio < 0.67) { sm_score = 0.65; sm_favor = 'XIU'; }
+  }
+  if (sm_favor === minorMoney) scoreTowardMinorSide += sm_score * 0.20;
+  else if (sm_favor) scoreTowardMinorSide -= sm_score * 0.10;
+  const majorCrowdPct = Math.max(pctUserTai, 100 - pctUserTai);
+  const majorCrowd = pctUserTai >= 50 ? 'TAI' : 'XIU';
+  const minorCrowd = majorCrowd === 'TAI' ? 'XIU' : 'TAI';
+  const ct_score = majorCrowdPct > 65 ? 0.80 : majorCrowdPct > 60 ? 0.55 : majorCrowdPct > 55 ? 0.30 : 0.05;
+  if (minorCrowd === minorMoney) scoreTowardMinorSide += ct_score * 0.30;
+  else scoreTowardMinorSide += ct_score * 0.10;
+  const div_pct = divergence * 100;
+  const div_score = div_pct > 20 ? 0.80 : div_pct > 10 ? 0.50 : 0.10;
+  if (div_pct > 10) {
+    if (majorMoney === minorMoney) scoreTowardMinorSide += div_score * 0.10;
+    else scoreTowardMinorSide -= div_score * 0.05;
+  }
+  const finalScore = Math.max(0, Math.min(1, 0.50 + scoreTowardMinorSide));
+  let prediction, confidence;
+  if (finalScore > 0.72) { prediction = minorMoney; confidence = finalScore; }
+  else if (finalScore > 0.60) { prediction = minorMoney; confidence = finalScore; }
+  else if (finalScore > 0.52) { prediction = minorMoney; confidence = finalScore; }
+  else if (finalScore < 0.48) { prediction = majorMoney; confidence = 1 - finalScore; }
+  else { prediction = 'SKIP'; confidence = 0.50; }
+  return { prediction, confidence };
+}
+
+function initLive() {
+  // Thêm live status bar vào header
+  const header = document.querySelector('.header');
+  const bar = document.createElement('div');
+  bar.id = 'liveBar';
+  bar.style.cssText = `
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    margin-top:14px; padding:10px 16px;
+    background:rgba(0,0,0,0.4); border:1px solid var(--border);
+    border-radius:4px; font-family:var(--mono); font-size:0.78rem;
+  `;
+  bar.innerHTML = `
+    <span id="liveDot" style="width:8px;height:8px;border-radius:50%;background:#4a6080;display:inline-block;flex-shrink:0"></span>
+    <span id="liveStatus" style="color:var(--muted)">Đang kết nối server...</span>
+    <span id="liveSession" style="color:var(--muted)"></span>
+    <span id="liveTick" style="color:var(--muted)"></span>
+    <label style="color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px;margin-left:8px">
+      <input type="checkbox" id="chkAutoAnalyze" checked style="cursor:pointer"> Auto phân tích
+    </label>
+  `;
+  header.appendChild(bar);
+  document.getElementById('chkAutoAnalyze').addEventListener('change', e => {
+    liveAutoAnalyze = e.target.checked;
+  });
+
+  connectSSE();
+}
+
+function connectSSE() {
+  if (sseSource) sseSource.close();
+
+  sseSource = new EventSource(`${API_BASE}/live`);
+
+  sseSource.addEventListener('open', () => {
+    setLiveStatus('connected', '🟢 LIVE — Đang nhận dữ liệu real-time');
+    // Lấy snapshot hiện tại
+    fetch(`${API_BASE}/live-snapshot`)
+      .then(r => r.json())
+      .then(snap => {
+        if (snap.tick) applyTickData(snap.tick);
+        if (snap.history && snap.history.length) {
+          // Điền lịch sử kết quả vào history panel
+          snap.history.slice(0, 30).forEach(r => {
+            if (r.result && !liveResultHistory.find(x => x.sessionId === r.sessionId)) {
+              liveResultHistory.push({ sessionId: r.sessionId, result: r.result, dominant: r.taiPct > r.xiuPct ? 'TAI' : 'XIU' });
+            }
+          });
+          syncHistoryFromLive();
+        }
+      })
+      .catch(() => {});
+  });
+
+  sseSource.addEventListener('tick', e => {
+    try {
+      const tick = JSON.parse(e.data);
+      applyTickData(tick);
+    } catch {}
+  });
+
+  sseSource.addEventListener('new-session', e => {
+    try {
+      const s = JSON.parse(e.data);
+      liveSessionId = s.id;
+      liveTickCount = 0;
+      resetLock(s.id);
+      document.getElementById('liveSession').textContent = `Phiên #${s.id}`;
+      document.getElementById('liveTick').textContent = '';
+    } catch {}
+  });
+
+  sseSource.addEventListener('result', e => {
+    try {
+      const r = JSON.parse(e.data);
+      recordPredictionResult(+r.sessionId, r.result);
+      const amtTai = parseFloat(document.getElementById('amtTai').value) || 0;
+      const amtXiu = parseFloat(document.getElementById('amtXiu').value) || 0;
+      const dominant = amtTai > amtXiu ? 'TAI' : amtXiu > amtTai ? 'XIU' : 'EQUAL';
+      liveResultHistory.unshift({ sessionId: r.sessionId, result: r.result, dominant });
+      if (liveResultHistory.length > 100) liveResultHistory.pop();
+      syncHistoryFromLive();
+      flashResult(r.result);
+    } catch {}
+  });
+
+  sseSource.addEventListener('error', () => {
+    setLiveStatus('disconnected', '🔴 Mất kết nối — đang thử lại...');
+    setTimeout(connectSSE, 5000);
+  });
+}
+
+function applyTickData(tick) {
+  if (!tick || !tick.data) return;
+  const d = tick.data;
+  const taiAmt  = d.totalAmountPerType?.TAI || 0;
+  const xiuAmt  = d.totalAmountPerType?.XIU || 0;
+  const taiUser = d.totalUsersPerType?.TAI  || 0;
+  const xiuUser = d.totalUsersPerType?.XIU  || 0;
+
+  if (taiAmt <= 0 || xiuAmt <= 0) return;
+
+  // Điền vào form
+  document.getElementById('amtTai').value  = taiAmt;
+  document.getElementById('amtXiu').value  = xiuAmt;
+  document.getElementById('userTai').value = taiUser;
+  document.getElementById('userXiu').value = xiuUser;
+
+  liveTickCount++;
+  if (tick.id) liveSessionId = tick.id;
+
+  // Cập nhật timer widget
+  updateTimer(tick);
+
+  const stateLabel = tick.state === 'BETTING' ? `⏱ ${tick.subTick}s` : tick.state === 'RESULT' ? '🏁 KẾT QUẢ' : tick.state || '';
+  document.getElementById('liveTick').textContent = `Tick ${tick.tick} | ${stateLabel}`;
+  if (tick.id) document.getElementById('liveSession').textContent = `Phiên #${tick.id}`;
+
+    if (tick.state === 'BETTING' && tick.subTick >= 5) {
+    if (liveAutoAnalyze) analyze();
+    const result = analyzeAndReturn();
+    if (result && tick.id) {
+      const totalAmt = taiAmt + xiuAmt;
+      const taiPct = totalAmt > 0 ? taiAmt / totalAmt * 100 : 50;
+      trySmartLock(result.prediction, result.confidence, tick.subTick, taiPct, 100 - taiPct, tick.id);
+    }
+  } else if (tick.state === 'BETTING' && tick.subTick < 5) {
+    // Dưới 5s — vẫn analyze để hiển thị, không khóa thêm
+    if (liveAutoAnalyze) analyze();
+  }
+}
+
+function syncHistoryFromLive() {
+  // Đồng bộ liveResultHistory vào historyRecords
+  historyRecords = liveResultHistory.map(r => ({
+    result: r.result,
+    dominant: r.dominant,
+    time: Date.now()
+  }));
+  renderHistory();
+}
+
+function flashResult(result) {
+  const cls = result === 'TAI' ? 'var(--tai)' : 'var(--xiu)';
+  const bar = document.getElementById('liveBar');
+  if (!bar) return;
+  bar.style.borderColor = cls;
+  bar.style.boxShadow = `0 0 20px ${cls}40`;
+  setTimeout(() => {
+    bar.style.borderColor = 'var(--border)';
+    bar.style.boxShadow = '';
+  }, 3000);
+}
+
+// ============================================================
+// TIMER WIDGET
+// ============================================================
+const BETTING_TOTAL = 35; // giây cược
+const RESULT_TOTAL  = 15; // giây mở bát
+
+let timerState = { phase: 'waiting', subTick: 0, tick: 0, sessionId: null, totalAmt: 0 };
+
+function updateTimer(tick) {
+  if (!tick) return;
+  timerState = {
+    phase: tick.state === 'BETTING' ? 'betting' : 'result',
+    subTick: tick.subTick || 0,
+    tick: tick.tick || 0,
+    sessionId: tick.id || timerState.sessionId,
+    totalAmt: tick.data?.totalAmount || timerState.totalAmt
+  };
+  renderTimer();
+}
+
+function renderTimer() {
+  const { phase, subTick, tick, sessionId, totalAmt } = timerState;
+  const isBetting = phase === 'betting';
+  const total = isBetting ? BETTING_TOTAL : RESULT_TOTAL;
+  const pct = total > 0 ? (subTick / total * 100) : 0;
+  const urgent = isBetting && subTick <= 8;
+
+  // Phase label
+  const phaseEl = document.getElementById('timerPhase');
+  const phaseLabelEl = document.getElementById('timerPhaseLabel');
+  const countdownEl = document.getElementById('timerCountdown');
+  const barEl = document.getElementById('timerBar');
+
+  if (phaseEl) {
+    phaseEl.textContent = isBetting ? 'CƯỢC' : 'MỞ BÁT';
+    phaseEl.className = 'timer-phase ' + phase;
+  }
+  if (phaseLabelEl) {
+    phaseLabelEl.textContent = isBetting
+      ? (urgent ? '⚠️ SẮP ĐÓNG CƯỢC' : '🟢 Đang nhận cược')
+      : '🎲 Đang mở kết quả';
+  }
+  if (countdownEl) {
+    countdownEl.textContent = subTick > 0 ? subTick : '--';
+    countdownEl.className = 'timer-countdown ' + phase + (urgent ? ' urgent' : '');
+  }
+  if (barEl) {
+    barEl.style.width = pct + '%';
+    barEl.className = 'timer-progress-bar ' + phase + (urgent ? ' urgent' : '');
+  }
+
+  // Meta
+  const fmtAmt = v => v >= 1e9 ? (v/1e9).toFixed(2)+'B' : v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v > 0 ? v.toFixed(0) : '—';
+  const tmSession = document.getElementById('tmSession');
+  const tmTick = document.getElementById('tmTick');
+  const tmSubTick = document.getElementById('tmSubTick');
+  const tmTotal = document.getElementById('tmTotal');
+  if (tmSession) tmSession.textContent = sessionId || '—';
+  if (tmTick) tmTick.textContent = tick || '—';
+  if (tmSubTick) tmSubTick.textContent = subTick || '—';
+  if (tmTotal) tmTotal.textContent = fmtAmt(totalAmt);
+
+  // Tick dots — 35 chấm cho BETTING, 15 cho RESULT
+  const dotsEl = document.getElementById('timerDots');
+  if (dotsEl) {
+    const dotCount = total;
+    let html = '';
+    for (let i = dotCount; i >= 1; i--) {
+      const isActive = i === subTick;
+      const isDone = i > subTick;
+      const cls = isActive ? (isBetting ? 'tick-dot active' : 'tick-dot result-dot active')
+                : isDone   ? (isBetting ? 'tick-dot done' : 'tick-dot result-dot')
+                : 'tick-dot';
+      html += '<div class="' + cls + '"></div>';
+    }
+    dotsEl.innerHTML = html;
+  }
+}
+
+function setLiveStatus(state, text) {
+  const dot = document.getElementById('liveDot');
+  const status = document.getElementById('liveStatus');
+  if (!dot || !status) return;
+  if (state === 'connected') {
+    dot.style.background = 'var(--green)';
+    dot.style.boxShadow = '0 0 8px var(--green)';
+  } else {
+    dot.style.background = '#ff3b5c';
+    dot.style.boxShadow = '0 0 8px #ff3b5c';
+  }
+  status.textContent = text;
+}
+</script>
+</body>
+</html>
