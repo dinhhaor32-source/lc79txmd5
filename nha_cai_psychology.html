@@ -1139,27 +1139,17 @@ function analyze() {
 
   let prediction, confidence, confLabel;
 
-  if (finalScore > 0.72) {
-    prediction = minorMoney;
-    confidence = finalScore;
-    confLabel = 'TÍN HIỆU RẤT MẠNH';
-  } else if (finalScore > 0.62) {
-    prediction = minorMoney;
-    confidence = finalScore;
-    confLabel = 'Tín hiệu mạnh';
-  } else if (finalScore > 0.55) {
-    prediction = minorMoney;
-    confidence = finalScore;
-    confLabel = 'Tín hiệu vừa';
-  } else if (finalScore < 0.46) {
-    prediction = majorMoney;
-    confidence = 1 - finalScore;
-    confLabel = 'Thị trường nghiêng';
+  // V3 ZONE-BASED
+  if (majorPct >= 60 && majorPct < 65) {
+    prediction = majorMoney; confidence = 0.64; confLabel = '🎯 ZONE 60-64% — Theo bên nhiều tiền';
+  } else if (majorPct >= 65 || majorPct < 45) {
+    if (finalScore > 0.72) { prediction = minorMoney; confidence = finalScore; confLabel = 'TÍN HIỆU RẤT MẠNH'; }
+    else if (finalScore > 0.62) { prediction = minorMoney; confidence = finalScore; confLabel = 'Tín hiệu mạnh'; }
+    else if (finalScore > 0.55) { prediction = minorMoney; confidence = finalScore; confLabel = 'Tín hiệu vừa'; }
+    else if (finalScore < 0.46) { prediction = majorMoney; confidence = 1 - finalScore; confLabel = 'Thị trường nghiêng'; }
+    else { prediction = 'SKIP'; confidence = 0.50; confLabel = 'Tín hiệu không rõ'; }
   } else {
-    // v2: Mở rộng vùng SKIP từ 0.48-0.52 lên 0.46-0.55 — bỏ qua nhiều hơn khi không chắc
-    prediction = 'SKIP';
-    confidence = 0.50;
-    confLabel = 'Tín hiệu không rõ — bỏ qua';
+    prediction = 'SKIP'; confidence = 0.50; confLabel = `⛔ SKIP — vùng nhiễu ${majorPct.toFixed(1)}%`;
   }
 
   // === RENDER ===
@@ -1253,6 +1243,41 @@ let lockState = {
 let predictionLog = (() => { try { return JSON.parse(localStorage.getItem('predLog') || '[]'); } catch { return []; } })();
 let pendingPrediction = null; // dự đoán đang chờ kết quả { sessionId, prediction, confidence, lockSubTick, taiPct, xiuPct, time }
 
+// ============================================================
+// STREAK DETECTOR — theo dõi bên nhiều tiền có đang thắng liên tục không
+// ============================================================
+// Lưu 5 phiên gần nhất: { domSide: 'TAI'|'XIU', result: 'TAI'|'XIU', domWon: bool }
+let recentPatterns = (() => { try { return JSON.parse(localStorage.getItem('recentPatterns') || '[]'); } catch { return []; } })();
+
+function updateRecentPattern(taiPct, result) {
+  const domSide = taiPct > 50 ? 'TAI' : 'XIU';
+  const domWon = result === domSide;
+  recentPatterns.unshift({ domSide, result, domWon, taiPct });
+  if (recentPatterns.length > 5) recentPatterns.pop();
+  try { localStorage.setItem('recentPatterns', JSON.stringify(recentPatterns)); } catch {}
+}
+
+/**
+ * Kiểm tra mode hiện tại dựa trên 3 phiên gần nhất
+ * Returns: 'reverse' (ngược bên nhiều tiền - mặc định) | 'follow' (theo bên nhiều tiền)
+ */
+function getCurrentMode() {
+  if (recentPatterns.length < 2) return 'reverse'; // chưa đủ data → dùng mặc định
+  const recent3 = recentPatterns.slice(0, 3);
+  const domWonCount = recent3.filter(p => p.domWon).length;
+  // Nếu 2/3 hoặc 3/3 phiên gần nhất bên nhiều tiền thắng → đổi sang follow mode
+  if (domWonCount >= 2) return 'follow';
+  return 'reverse';
+}
+
+function getModeLabel() {
+  const mode = getCurrentMode();
+  const recent3 = recentPatterns.slice(0, 3);
+  const domWonCount = recent3.filter(p => p.domWon).length;
+  if (mode === 'follow') return `🔄 FOLLOW MODE (bên nhiều tiền thắng ${domWonCount}/${recent3.length} phiên gần nhất)`;
+  return `⚡ REVERSE MODE (bên ít tiền thắng ${recent3.filter(p=>!p.domWon).length}/${recent3.length} phiên gần nhất)`;
+}
+
 function trySmartLock(prediction, confidence, subTick, taiPct, xiuPct, sessionId) {
   const _sid = +sessionId;
   if (lockState.locked && +lockState.sessionId === _sid) return;
@@ -1273,27 +1298,12 @@ function trySmartLock(prediction, confidence, subTick, taiPct, xiuPct, sessionId
   // Thuật toán gốc + rule thêm: tới 5s mà conf < 60% → SKIP
   let shouldLock = false, lockReason = '';
 
-  if (confPct >= 78 && subTick >= 8 && isStable(3)) {
-    shouldLock = true; lockReason = `🔥 Tín hiệu rất mạnh — khóa sớm (${subTick}s)`;
-  } else if (confPct >= 62 && subTick >= 5 && isStable(2)) {
-    shouldLock = true; lockReason = `✅ Tín hiệu mạnh ổn định — khóa tại ${subTick}s`;
-  } else if (subTick <= 5 && prediction !== 'SKIP' && confPct >= 60) {
-    // Tới 5s, conf đủ → khóa
-    shouldLock = true; lockReason = `⏱ Khóa tại ${subTick}s — conf ${confPct.toFixed(0)}%`;
-  } else if (subTick <= 5 && (confPct < 60 || prediction === 'SKIP')) {
-    // Tới 5s mà conf < 60% hoặc SKIP → bỏ qua phiên này
-    lockState.locked = true;
-    lockState.prediction = 'SKIP';
-    lockState.confidence = 0.5;
-    lockState.lockSubTick = subTick;
-    lockState.taiPctAtLock = taiPct;
-    lockState.xiuPctAtLock = xiuPct;
-    const badge = document.getElementById('lockBadge');
-    if (badge) { badge.className = 'lock-badge waiting'; badge.textContent = `⛔ SKIP — conf ${confPct.toFixed(0)}% < 60% tại ${subTick}s`; }
-    return;
+  // Khóa ngay khi có tín hiệu — không giới hạn thời gian
+  if (prediction !== 'SKIP') {
+    shouldLock = true; lockReason = `🔒 Khóa tại ${subTick}s`;
   }
 
-  if (shouldLock) {
+    if (shouldLock) {
     lockState.locked = true;
     lockState.prediction = prediction;
     lockState.confidence = confidence;
@@ -1317,8 +1327,9 @@ function trySmartLock(prediction, confidence, subTick, taiPct, xiuPct, sessionId
     if (badge && !lockState.locked) {
       const stableCount = lockState.signalHistory.filter(s => s.prediction === prediction).length;
       badge.className = 'lock-badge waiting';
-      const confColor = confPct >= 62 ? '🟢' : confPct >= 55 ? '🟡' : '🔴';
-      badge.textContent = `⏳ ${confColor} conf ${confPct.toFixed(0)}% | còn ${subTick}s | ổn ${stableCount} tick`;
+      const imb = Math.max(taiPct, xiuPct);
+      const imbColor = imb >= 65 ? '🟢' : imb >= 60 ? '🟡' : '🔴';
+      badge.textContent = `⏳ ${imbColor} Lệch ${imb.toFixed(1)}% | còn ${subTick}s → khóa lúc 5s`;
     }
   }
 }
@@ -1345,6 +1356,8 @@ function recordPredictionResult(sessionId, actualResult) {
   sessionId = sid;
   const pred = lockState.prediction;
   const correct = pred === 'SKIP' ? null : pred === actualResult;
+  // Cập nhật streak detector
+  updateRecentPattern(lockState.taiPctAtLock, actualResult);
   // Xóa pending
   if (pendingPrediction && +pendingPrediction.sessionId === sid) pendingPrediction = null;
   predictionLog.unshift({
@@ -1538,11 +1551,22 @@ function analyzeAndReturn() {
   if (majorPct > 60 && majorPct <= 69) finalScore = 0.50 + (finalScore - 0.50) * 0.55;
   finalScore = Math.min(finalScore, 0.85);
   let prediction, confidence;
-  if (finalScore > 0.72) { prediction = minorMoney; confidence = finalScore; }
-  else if (finalScore > 0.62) { prediction = minorMoney; confidence = finalScore; }
-  else if (finalScore > 0.55) { prediction = minorMoney; confidence = finalScore; }
-  else if (finalScore < 0.46) { prediction = majorMoney; confidence = 1 - finalScore; }
-  else { prediction = 'SKIP'; confidence = 0.50; }
+  // Cập nhật mode label
+  const ml = document.getElementById('modeLabel');
+  if (ml) ml.textContent = getModeLabel();
+
+  // V3 ZONE-BASED
+  if (majorPct >= 60 && majorPct < 65) {
+    prediction = majorMoney; confidence = 0.64;
+  } else if (majorPct >= 65 || majorPct < 45) {
+    if (finalScore > 0.72) { prediction = minorMoney; confidence = finalScore; }
+    else if (finalScore > 0.62) { prediction = minorMoney; confidence = finalScore; }
+    else if (finalScore > 0.55) { prediction = minorMoney; confidence = finalScore; }
+    else if (finalScore < 0.46) { prediction = majorMoney; confidence = 1 - finalScore; }
+    else { prediction = 'SKIP'; confidence = 0.50; }
+  } else {
+    prediction = 'SKIP'; confidence = 0.50;
+  }
   return { prediction, confidence };
 }
 
@@ -1562,6 +1586,7 @@ function initLive() {
     <span id="liveStatus" style="color:var(--muted)">Đang kết nối server...</span>
     <span id="liveSession" style="color:var(--muted)"></span>
     <span id="liveTick" style="color:var(--muted)"></span>
+    <span id="modeLabel" style="color:var(--gold);font-size:0.72rem;margin-left:4px"></span>
     <label style="color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px;margin-left:8px">
       <input type="checkbox" id="chkAutoAnalyze" checked style="cursor:pointer"> Auto phân tích
     </label>
@@ -1678,13 +1703,15 @@ function applyTickData(tick) {
 }
 
 function syncHistoryFromLive() {
-  // Đồng bộ liveResultHistory vào historyRecords
   historyRecords = liveResultHistory.map(r => ({
     result: r.result,
     dominant: r.dominant,
     time: Date.now()
   }));
   renderHistory();
+  // Cập nhật mode label
+  const ml = document.getElementById('modeLabel');
+  if (ml) ml.textContent = getModeLabel();
 }
 
 function flashResult(result) {
