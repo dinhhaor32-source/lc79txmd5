@@ -555,6 +555,11 @@ body::after {
 .tick-dot.result-dot { background: rgba(240,180,41,0.3); }
 .tick-dot.result-dot.active { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
 
+/* === PENDING ROW === */
+.pred-table tr.pending td { background: rgba(240,180,41,0.06); }
+.badge-pending { color: var(--gold); font-size: 0.75rem; animation: blink 1.2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
 /* === LOCK BADGE === */
 .lock-badge {
   display: inline-flex; align-items: center; gap: 6px;
@@ -1015,10 +1020,12 @@ function analyze() {
   const majorPct   = Math.max(pctAmtTai, pctAmtXiu);
   let mp_score = 0, mp_strength = '';
 
-  if (majorPct > 75) { mp_score = 0.90; mp_strength = 'Rất mạnh 🔥'; }
-  else if (majorPct > 67) { mp_score = 0.75; mp_strength = 'Mạnh'; }
-  else if (majorPct > 60) { mp_score = 0.55; mp_strength = 'Vừa'; }
-  else if (majorPct > 55) { mp_score = 0.35; mp_strength = 'Yếu'; }
+  // v2: data thực tế cho thấy >=70% đúng 80%, 60-69% chỉ đúng 37% → điều chỉnh
+  if (majorPct > 80) { mp_score = 0.82; mp_strength = 'Cực mạnh 🔥'; }
+  else if (majorPct > 70) { mp_score = 0.75; mp_strength = 'Rất mạnh'; }
+  else if (majorPct > 65) { mp_score = 0.38; mp_strength = 'Trung bình (cẩn thận)'; }
+  else if (majorPct > 60) { mp_score = 0.22; mp_strength = 'Yếu — vùng nhiễu'; }
+  else if (majorPct > 55) { mp_score = 0.30; mp_strength = 'Vừa'; }
   else { mp_score = 0.10; mp_strength = 'Rất yếu (cân bằng)'; }
 
   scoreTowardMinorSide += mp_score * 0.40;
@@ -1121,29 +1128,38 @@ function analyze() {
 
   // === FINAL DECISION ===
   // scoreTowardMinorSide: xác suất bên ít tiền hơn thắng
-  const finalScore = Math.max(0, Math.min(1, 0.50 + scoreTowardMinorSide));
+  let finalScore = Math.max(0, Math.min(1, 0.50 + scoreTowardMinorSide));
+
+  // v2: Penalty vùng 60-69% — vùng nhiễu, giảm confidence xuống
+  if (majorPct > 60 && majorPct <= 69) {
+    finalScore = 0.50 + (finalScore - 0.50) * 0.55; // giảm 45% độ lệch
+  }
+  // v2: Cap confidence tối đa 85% — tránh overconfident như conf 99% mà sai
+  finalScore = Math.min(finalScore, 0.85);
+
   let prediction, confidence, confLabel;
 
   if (finalScore > 0.72) {
     prediction = minorMoney;
     confidence = finalScore;
     confLabel = 'TÍN HIỆU RẤT MẠNH';
-  } else if (finalScore > 0.60) {
+  } else if (finalScore > 0.62) {
     prediction = minorMoney;
     confidence = finalScore;
     confLabel = 'Tín hiệu mạnh';
-  } else if (finalScore > 0.52) {
+  } else if (finalScore > 0.55) {
     prediction = minorMoney;
     confidence = finalScore;
     confLabel = 'Tín hiệu vừa';
-  } else if (finalScore < 0.48) {
+  } else if (finalScore < 0.46) {
     prediction = majorMoney;
     confidence = 1 - finalScore;
-    confLabel = 'Thị trường nghiêng (không theo lý thuyết)';
+    confLabel = 'Thị trường nghiêng';
   } else {
+    // v2: Mở rộng vùng SKIP từ 0.48-0.52 lên 0.46-0.55 — bỏ qua nhiều hơn khi không chắc
     prediction = 'SKIP';
     confidence = 0.50;
-    confLabel = 'Tín hiệu quá yếu — nên bỏ qua';
+    confLabel = 'Tín hiệu không rõ — bỏ qua';
   }
 
   // === RENDER ===
@@ -1235,6 +1251,7 @@ let lockState = {
   sessionId: null, signalHistory: []
 };
 let predictionLog = (() => { try { return JSON.parse(localStorage.getItem('predLog') || '[]'); } catch { return []; } })();
+let pendingPrediction = null; // dự đoán đang chờ kết quả { sessionId, prediction, confidence, lockSubTick, taiPct, xiuPct, time }
 
 function trySmartLock(prediction, confidence, subTick, taiPct, xiuPct, sessionId) {
   const _sid = +sessionId;
@@ -1290,6 +1307,11 @@ function trySmartLock(prediction, confidence, subTick, taiPct, xiuPct, sessionId
       const col = prediction === 'TAI' ? 'rgba(255,59,92,0.35)' : prediction === 'XIU' ? 'rgba(0,212,255,0.35)' : 'rgba(240,180,41,0.35)';
       panel.style.borderColor = col; panel.style.boxShadow = `0 0 28px ${col}`;
     }
+    // Lưu pending và render ngay
+    if (prediction !== 'SKIP') {
+      pendingPrediction = { sessionId, prediction, confidence, lockSubTick: subTick, taiPct, xiuPct, time: Date.now() };
+      renderPredictionHistory();
+    }
   } else {
     const badge = document.getElementById('lockBadge');
     if (badge && !lockState.locked) {
@@ -1310,6 +1332,7 @@ function resetLock(newSessionId) {
   if (panel) { panel.style.borderColor = ''; panel.style.boxShadow = ''; }
   // Reset timer
   timerState = { phase: 'waiting', subTick: 0, tick: 0, sessionId: newSessionId, totalAmt: 0 };
+  pendingPrediction = null;
   const phaseEl = document.getElementById('timerPhase');
   if (phaseEl) { phaseEl.textContent = 'PHIÊN MỚI'; phaseEl.className = 'timer-phase waiting'; }
   const cdEl = document.getElementById('timerCountdown');
@@ -1317,11 +1340,13 @@ function resetLock(newSessionId) {
 }
 
 function recordPredictionResult(sessionId, actualResult) {
-  const sid = +sessionId; // chuẩn hóa về number
+  const sid = +sessionId;
   if (!lockState.locked || +lockState.sessionId !== sid) return;
   sessionId = sid;
   const pred = lockState.prediction;
   const correct = pred === 'SKIP' ? null : pred === actualResult;
+  // Xóa pending
+  if (pendingPrediction && +pendingPrediction.sessionId === sid) pendingPrediction = null;
   predictionLog.unshift({
     sessionId, prediction: pred, confidence: lockState.confidence,
     lockSubTick: lockState.lockSubTick, taiPct: lockState.taiPctAtLock,
@@ -1329,7 +1354,6 @@ function recordPredictionResult(sessionId, actualResult) {
   });
   if (predictionLog.length > 100) predictionLog.pop();
   try { localStorage.setItem('predLog', JSON.stringify(predictionLog)); } catch {}
-  // Lưu lên server (file predictions-log.jsonl)
   try {
     fetch(API_BASE + '/save-prediction', {
       method: 'POST',
@@ -1418,11 +1442,29 @@ function renderPredictionHistory() {
     }).join('');
     lockStatsEl.innerHTML = rows || '<span style="color:var(--muted)">Chưa đủ dữ liệu...</span>';
   }
-  if (predictionLog.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:20px">Chưa có dữ liệu — đang chờ kết quả phiên...</td></tr>';
+  // Pending row
+  let pendingRow = '';
+  if (pendingPrediction) {
+    const pc = pendingPrediction.prediction === 'TAI' ? 'badge-tai' : 'badge-xiu';
+    const confColor = pendingPrediction.confidence * 100 > 72 ? 'var(--green)' : 'var(--gold)';
+    const t = new Date(pendingPrediction.time).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    pendingRow = `<tr class="pending">
+      <td style="color:var(--muted);font-size:0.72rem">${t}</td>
+      <td style="color:var(--muted)">#${pendingPrediction.sessionId}</td>
+      <td><span class="badge-lock">🔒 ${pendingPrediction.lockSubTick}s</span></td>
+      <td><span class="${pc}">${pendingPrediction.prediction}</span></td>
+      <td><span class="badge-pending">⏳ Đang chờ...</span></td>
+      <td>—</td>
+      <td style="color:${confColor}">${(pendingPrediction.confidence*100).toFixed(1)}%</td>
+      <td style="color:var(--tai)">${pendingPrediction.taiPct.toFixed(1)}%</td>
+      <td style="color:var(--xiu)">${pendingPrediction.xiuPct.toFixed(1)}%</td>
+    </tr>`;
+  }
+  if (predictionLog.length === 0 && !pendingPrediction) {
+    tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);text-align:center;padding:20px">Chưa có dữ liệu — đang chờ kết quả phiên...</td></tr>';
     return;
   }
-  tbody.innerHTML = predictionLog.slice(0, 50).map(p => {
+  tbody.innerHTML = pendingRow + predictionLog.slice(0, 50).map(p => {
     const rowCls = p.correct === null ? 'skip' : p.correct ? 'correct' : 'wrong';
     const predCls = p.prediction === 'TAI' ? 'badge-tai' : p.prediction === 'XIU' ? 'badge-xiu' : 'badge-skip';
     const resCls = p.result === 'TAI' ? 'badge-tai' : 'badge-xiu';
@@ -1466,7 +1508,8 @@ function analyzeAndReturn() {
   const minorMoney = majorMoney === 'TAI' ? 'XIU' : 'TAI';
   const majorPct = Math.max(pctAmtTai, pctAmtXiu);
   let scoreTowardMinorSide = 0;
-  const mp_score = majorPct > 75 ? 0.90 : majorPct > 67 ? 0.75 : majorPct > 60 ? 0.55 : majorPct > 55 ? 0.35 : 0.10;
+  // v2: same logic as analyze()
+  const mp_score = majorPct > 80 ? 0.82 : majorPct > 70 ? 0.75 : majorPct > 65 ? 0.38 : majorPct > 60 ? 0.22 : majorPct > 55 ? 0.30 : 0.10;
   scoreTowardMinorSide += mp_score * 0.40;
   let sm_score = 0, sm_favor = null;
   if (avgBetTai > 0 && avgBetXiu > 0) {
@@ -1490,12 +1533,15 @@ function analyzeAndReturn() {
     if (majorMoney === minorMoney) scoreTowardMinorSide += div_score * 0.10;
     else scoreTowardMinorSide -= div_score * 0.05;
   }
-  const finalScore = Math.max(0, Math.min(1, 0.50 + scoreTowardMinorSide));
+  let finalScore = Math.max(0, Math.min(1, 0.50 + scoreTowardMinorSide));
+  // v2: penalty vùng 60-69% + cap 85%
+  if (majorPct > 60 && majorPct <= 69) finalScore = 0.50 + (finalScore - 0.50) * 0.55;
+  finalScore = Math.min(finalScore, 0.85);
   let prediction, confidence;
   if (finalScore > 0.72) { prediction = minorMoney; confidence = finalScore; }
-  else if (finalScore > 0.60) { prediction = minorMoney; confidence = finalScore; }
-  else if (finalScore > 0.52) { prediction = minorMoney; confidence = finalScore; }
-  else if (finalScore < 0.48) { prediction = majorMoney; confidence = 1 - finalScore; }
+  else if (finalScore > 0.62) { prediction = minorMoney; confidence = finalScore; }
+  else if (finalScore > 0.55) { prediction = minorMoney; confidence = finalScore; }
+  else if (finalScore < 0.46) { prediction = majorMoney; confidence = 1 - finalScore; }
   else { prediction = 'SKIP'; confidence = 0.50; }
   return { prediction, confidence };
 }
